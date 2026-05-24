@@ -1,6 +1,5 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
 
   # Ignora a pasta do backend (/beck_studio) para que ela não seja reescrita para o index.html
   RewriteRule ^beck_studio($|/) - [L]
