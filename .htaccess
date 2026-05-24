@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Ignora a pasta do backend (/beck_studio) para que ela não seja reescrita para o index.html
+  RewriteRule ^beck_studio($|/) - [L]
+
+  # Se o arquivo ou diretório solicitado existe fisicamente, serve ele diretamente
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Redireciona todas as outras requisições para o index.html (React Router controlará)
+  RewriteRule ^ index.html [L]
+</IfModule>
