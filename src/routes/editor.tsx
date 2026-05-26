@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -24,11 +24,24 @@ import {
   Sparkles,
   Square,
   Undo2,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Scene3D } from "@/components/scene-3d";
 import { FloorPlan2D } from "@/components/floor-plan-2d";
+import { api } from "@/lib/api";
+import { Project } from "@/hooks/use-projects";
+
+type EditorSearch = {
+  projectId?: number;
+};
 
 export const Route = createFileRoute("/editor")({
+  validateSearch: (search: Record<string, unknown>): EditorSearch => {
+    return {
+      projectId: search.projectId ? Number(search.projectId) : undefined,
+    };
+  },
   beforeLoad: () => {
     const token = localStorage.getItem("archflow_token");
     if (!token) {
@@ -38,7 +51,7 @@ export const Route = createFileRoute("/editor")({
   head: () => ({
     meta: [
       { title: "Editor — ArchFlow" },
-      { name: "description", content: "Editor 2D/3D de plantas e ambientes." },
+      { name: "description", content: "Editor 2D/3D de plantas e ambientes interativos." },
     ],
   }),
   component: Editor,
@@ -63,16 +76,90 @@ const layers = [
 ];
 
 function Editor() {
+  const { projectId } = Route.useSearch();
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
   const [tool, setTool] = useState<string>("select");
   const [mode, setMode] = useState<"2d" | "3d">("2d");
   const [selected, setSelected] = useState<string | null>("f1");
   const [rightOpen, setRightOpen] = useState(true);
 
+  useEffect(() => {
+    if (!projectId) return;
+
+    const loadProject = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await api.get<Project>(`/api/projects/${projectId}`);
+        setProject(data);
+      } catch (err: any) {
+        setError(err.message || "Erro ao carregar projeto.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProject();
+  }, [projectId]);
+
+  const handleSave = async () => {
+    if (!project) return;
+    setSaving(true);
+    try {
+      // Simula salvar progresso atualizando na API real
+      const updated = await api.put<Project>(`/api/projects/${project.id}`, {
+        progress: Math.min((project.progress || 0) + 5, 100), // aumenta progresso a cada save
+      });
+      setProject(updated);
+      alert("Alterações salvas com sucesso!");
+    } catch (err: any) {
+      alert(err.message || "Erro ao salvar alterações.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Carregando workspace do projeto...</p>
+      </div>
+    );
+  }
+
+  if (error || (!projectId && !project)) {
+    return (
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-background gap-4 p-6 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <h3 className="font-display text-xl font-semibold">Falha ao abrir workspace</h3>
+        <p className="text-sm text-muted-foreground max-w-md">
+          {error || "Nenhum ID de projeto válido foi selecionado para edição."}
+        </p>
+        <Link
+          to="/projects"
+          className="rounded-lg bg-gradient-neon px-4 py-2 text-sm font-semibold text-neon-foreground shadow-glow hover:opacity-90 transition mt-2"
+        >
+          Voltar para Projetos
+        </Link>
+      </div>
+    );
+  }
+
+  const projName = project?.name || "Projeto Sem Nome";
+  const projType = project?.type || "Residencial";
+  const projArea = project?.area || 0;
+  const projRooms = project?.rooms || 0;
+
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background">
+    <div className="flex h-screen flex-col overflow-hidden bg-background animate-fade-in">
       {/* Topbar */}
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border/60 bg-surface/70 px-4 backdrop-blur-xl">
-        <Link to="/projects" className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground">
+        <Link to="/projects" className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground transition">
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="flex items-center gap-2">
@@ -81,11 +168,11 @@ function Editor() {
           </div>
           <div className="leading-tight">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Link to="/projects" className="hover:text-foreground">Projetos</Link>
+              <Link to="/projects" className="hover:text-foreground transition">Projetos</Link>
               <ChevronRight className="h-3 w-3" />
-              <span>Residencial</span>
+              <span>{projType}</span>
             </div>
-            <p className="font-display text-sm font-semibold">Residência Aurora</p>
+            <p className="font-display text-sm font-semibold">{projName}</p>
           </div>
         </div>
 
@@ -111,22 +198,29 @@ function Editor() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <button className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground md:inline-flex">
+          <button className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground md:inline-flex transition">
             <Eye className="h-3.5 w-3.5" /> Pré-visualizar
           </button>
-          <button className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground md:inline-flex">
+          <button className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground md:inline-flex transition">
             <Download className="h-3.5 w-3.5" /> Exportar
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-neon px-3 py-1.5 text-xs font-semibold text-neon-foreground shadow-glow hover:opacity-90">
-            <Save className="h-3.5 w-3.5" /> Salvar
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-neon px-3 py-1.5 text-xs font-semibold text-neon-foreground shadow-glow hover:opacity-90 transition disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            Salvar
           </button>
           <button
             onClick={() => setRightOpen((v) => !v)}
-            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground"
+            className="grid h-9 w-9 place-items-center rounded-lg border border-border bg-surface text-muted-foreground hover:text-foreground transition"
           >
             <PanelRight className="h-4 w-4" />
           </button>
-          <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-neon text-xs font-semibold text-neon-foreground">LM</div>
+          <div className="grid h-9 w-9 place-items-center rounded-full bg-gradient-neon text-xs font-semibold text-neon-foreground shadow-glow">
+            {project?.client ? project.client.substring(0, 2).toUpperCase() : "AF"}
+          </div>
         </div>
       </header>
 
@@ -149,14 +243,14 @@ function Editor() {
                 }
               >
                 <Icon className="h-4 w-4" />
-                <span className="pointer-events-none absolute left-full ml-2 hidden whitespace-nowrap rounded-md border border-border bg-surface px-2 py-1 text-[10px] text-foreground shadow-soft group-hover:block">
+                <span className="pointer-events-none absolute left-full ml-2 hidden whitespace-nowrap rounded-md border border-border bg-surface px-2 py-1 text-[10px] text-foreground shadow-soft group-hover:block z-50">
                   {t.label}
                 </span>
               </button>
             );
           })}
           <div className="my-2 h-px w-8 bg-border/60" />
-          <button title="Camadas" className="grid h-10 w-10 place-items-center rounded-lg text-muted-foreground hover:bg-surface hover:text-foreground">
+          <button title="Camadas" className="grid h-10 w-10 place-items-center rounded-lg text-muted-foreground hover:bg-surface hover:text-foreground transition">
             <Layers className="h-4 w-4" />
           </button>
         </aside>
@@ -193,7 +287,7 @@ function Editor() {
               <IconBtn small><span className="text-xs">−</span></IconBtn>
             </div>
             <div className="pointer-events-auto rounded-lg border border-border bg-surface/80 px-3 py-1.5 text-[11px] text-muted-foreground backdrop-blur">
-              Área: <span className="text-foreground">184 m²</span> · Cômodos: <span className="text-foreground">7</span>
+              Área: <span className="text-foreground">{projArea} m²</span> · Cômodos: <span className="text-foreground">{projRooms}</span>
             </div>
           </div>
         </section>
