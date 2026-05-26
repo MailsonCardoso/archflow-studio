@@ -15,11 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Usuário Admin padrão para testes
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name'     => 'Admin ArchFlow',
+            'email'    => 'admin@archflow.com',
+            'password' => bcrypt('password123'),
+        ]);
+
+        // Usuário extra de teste
+        User::factory()->create([
+            'name'     => 'Test User',
+            'email'    => 'test@archflow.com',
+            'password' => bcrypt('password123'),
         ]);
     }
 }
