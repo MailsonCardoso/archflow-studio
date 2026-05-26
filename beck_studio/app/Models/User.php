@@ -29,6 +29,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
     /**
      * Get the projects owned by the user.
      */
