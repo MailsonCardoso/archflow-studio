@@ -61,6 +61,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { Toaster } from "sonner";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -70,8 +73,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
-    <QueryClientProvider client={queryClient}>
-      <Outlet />
-    </QueryClientProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+        <Toaster position="top-right" theme="dark" closeButton richColors />
+      </QueryClientProvider>
+    </AuthProvider>
   );
+}
+
+function AppContent() {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          {/* Spinner animado com gradiente e brilho neon */}
+          <div className="relative h-12 w-12">
+            <div className="absolute inset-0 rounded-full border-4 border-muted" />
+            <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-primary shadow-glow" />
+          </div>
+          <p className="mt-2 font-display text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
+            Carregando ArchFlow...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return <Outlet />;
 }

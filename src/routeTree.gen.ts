@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as EditorRouteImport } from './routes/editor'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -29,6 +36,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EditorRoute = EditorRouteImport.update({
@@ -51,16 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/editor': typeof EditorRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRoute
+  '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/editor': typeof EditorRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRoute
+  '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRoutesById {
@@ -68,8 +84,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/editor': typeof EditorRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRoute
+  '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
 }
 export interface FileRouteTypes {
@@ -78,18 +96,30 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/editor'
+    | '/login'
     | '/profile'
     | '/projects'
+    | '/register'
     | '/sitemap.xml'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/editor' | '/profile' | '/projects' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/editor'
+    | '/login'
+    | '/profile'
+    | '/projects'
+    | '/register'
+    | '/sitemap.xml'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
     | '/editor'
+    | '/login'
     | '/profile'
     | '/projects'
+    | '/register'
     | '/sitemap.xml'
   fileRoutesById: FileRoutesById
 }
@@ -97,8 +127,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
   EditorRoute: typeof EditorRoute
+  LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRoute
+  RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
 }
 
@@ -109,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -123,6 +162,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/editor': {
@@ -153,8 +199,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   EditorRoute: EditorRoute,
+  LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRoute,
+  RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
 }
 export const routeTree = rootRouteImport

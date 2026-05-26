@@ -1,10 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Camera, Mail, MapPin, Award, Briefcase } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Topbar } from "@/components/topbar";
 import { projects, stats } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/auth-context";
 
 export const Route = createFileRoute("/profile")({
+  beforeLoad: () => {
+    const token = localStorage.getItem("archflow_token");
+    if (!token) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Perfil — ArchFlow" },
@@ -17,6 +24,27 @@ export const Route = createFileRoute("/profile")({
 const tabs = ["Visão geral", "Projetos", "Equipe", "Preferências", "Faturamento"];
 
 function Profile() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      // Ignora falhas de rede no logout
+    }
+    window.location.href = "/login";
+  };
+
+  const getInitials = (name?: string) => {
+    if (!name) return "AF";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  const userName = user?.name ?? "Lucas Mendes";
+  const userEmail = user?.email ?? "lucas@studioaurora.com";
+
   return (
     <AppShell>
       <Topbar title="Perfil" subtitle="Seu espaço pessoal." />
@@ -28,23 +56,28 @@ function Profile() {
             <div className="-mt-12 flex flex-wrap items-end gap-4">
               <div className="relative">
                 <div className="grid h-24 w-24 place-items-center rounded-2xl bg-gradient-neon font-display text-2xl font-semibold text-neon-foreground shadow-glow ring-4 ring-background">
-                  LM
+                  {getInitials(user?.name)}
                 </div>
                 <button className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full border border-border bg-surface text-muted-foreground hover:text-foreground">
                   <Camera className="h-3.5 w-3.5" />
                 </button>
               </div>
               <div className="flex-1 pt-2">
-                <h2 className="font-display text-2xl font-semibold">Lucas Mendes</h2>
+                <h2 className="font-display text-2xl font-semibold">{userName}</h2>
                 <p className="text-sm text-muted-foreground">Arquiteto · Studio Aurora · Plano Studio Pro</p>
                 <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> lucas@studioaurora.com</span>
+                  <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> {userEmail}</span>
                   <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> São Paulo, BR</span>
                   <span className="inline-flex items-center gap-1"><Briefcase className="h-3 w-3" /> CAU A12345-6</span>
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
-                <button className="rounded-lg border border-border bg-surface px-3 py-2 text-xs hover:bg-surface-elevated">Compartilhar perfil</button>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-lg border border-destructive bg-destructive/10 px-3 py-2 text-xs text-destructive hover:bg-destructive/20 transition cursor-pointer font-medium"
+                >
+                  Sair da conta
+                </button>
                 <button className="rounded-lg bg-gradient-neon px-3 py-2 text-xs font-semibold text-neon-foreground shadow-glow hover:opacity-90">Editar perfil</button>
               </div>
             </div>

@@ -1,11 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowUpRight, Plus, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Topbar } from "@/components/topbar";
 import { projects, stats, activity } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/auth-context";
 
 export const Route = createFileRoute("/dashboard")({
+  beforeLoad: () => {
+    const token = localStorage.getItem("archflow_token");
+    if (!token) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Dashboard — ArchFlow" },
@@ -16,9 +23,12 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
+  const { user } = useAuth();
+  const firstName = user?.name ? user.name.split(" ")[0] : "Lucas";
+
   return (
     <AppShell>
-      <Topbar title="Bom dia, Lucas" subtitle="Aqui está um resumo do seu estúdio hoje." />
+      <Topbar title={`Bom dia, ${firstName}`} subtitle="Aqui está um resumo do seu estúdio hoje." />
       <div className="mx-auto max-w-7xl space-y-8 p-6">
         <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((s, i) => (

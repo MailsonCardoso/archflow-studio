@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { Filter, Grid3x3, List, Plus, Search } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -6,6 +6,12 @@ import { Topbar } from "@/components/topbar";
 import { projects } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/projects")({
+  beforeLoad: () => {
+    const token = localStorage.getItem("archflow_token");
+    if (!token) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Projetos — ArchFlow" },

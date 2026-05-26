@@ -8,6 +8,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
+import { LogOut } from "lucide-react";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -18,6 +20,17 @@ const nav = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      // Ignora falhas de rede no logout
+    }
+    // Redireciona limpando todo estado
+    window.location.href = "/login";
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -69,6 +82,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Settings className="h-4 w-4" /> Configurações
           </Link>
+          <button
+            onClick={handleLogout}
+            className="mt-2 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" /> Sair da conta
+          </button>
         </div>
       </aside>
 

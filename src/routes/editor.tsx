@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +29,12 @@ import { Scene3D } from "@/components/scene-3d";
 import { FloorPlan2D } from "@/components/floor-plan-2d";
 
 export const Route = createFileRoute("/editor")({
+  beforeLoad: () => {
+    const token = localStorage.getItem("archflow_token");
+    if (!token) {
+      throw redirect({ to: "/login" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Editor — ArchFlow" },
